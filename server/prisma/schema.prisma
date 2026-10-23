@@ -1,0 +1,149 @@
+// Prisma schema for Hendrix Cargo & Logistics
+// Production targets PostgreSQL on Render; compatible with standard relational queries
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Administrator User for secure portal access
+model AdminUser {
+  id           String     @id @default(uuid())
+  username     String     @unique
+  email        String     @unique
+  passwordHash String
+  fullName     String?
+  role         String     @default("admin") // "superadmin", "admin", "agent"
+  isActive     Boolean    @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  auditLogs    AuditLog[]
+
+  @@map("admin_users")
+}
+
+// Real database-backed Shipment record
+model Shipment {
+  id                    String        @id @default(uuid())
+  trackingNumber        String        @unique // Format: HCL-2026-XXXXXXXX
+
+  // Sender Details
+  senderName            String
+  senderCompany         String?
+  senderPhone           String
+  senderEmail           String
+  senderAddress         String
+  senderCity            String
+  senderCountry         String
+
+  // Recipient Details
+  recipientName         String
+  recipientCompany      String?
+  recipientPhone        String
+  recipientEmail        String
+  recipientAddress      String
+  recipientCity         String
+  recipientCountry      String
+
+  // Route & Logistics Details
+  originCity            String
+  originCountry         String
+  destinationCity       String
+  destinationCountry    String
+  shippingMethod        String        // Air Freight, Sea Freight, Road Transportation, etc.
+
+  // Package Details
+  packagePieces         Int           @default(1)
+  packageWeightKg       Float         @default(0.0)
+  packageDimensions     String?       // e.g. 50x40x30 cm
+  packageDescription    String?       // Goods description
+
+  // Status & Timing
+  // Supported: Shipment Created, Processing, Picked Up, In Transit, Arrived at Facility,
+  // Customs Clearance, Out for Delivery, Delivered, Delivery Attempted, On Hold, Delayed, Returned to Sender, Cancelled
+  status                String        @default("Shipment Created")
+  currentLocation       String        // e.g., "Frankfurt Logistics Hub, Germany"
+  estimatedDeliveryDate DateTime?
+  actualDeliveryDate    DateTime?
+
+  // Internal Notes (Protected: never shown on public tracking pages)
+  internalNotes         String?
+
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  checkpoints           Checkpoint[]
+
+  @@index([trackingNumber])
+  @@index([status])
+  @@map("shipments")
+}
+
+// Milestone checkpoint timeline events
+model Checkpoint {
+  id            String    @id @default(uuid())
+  shipmentId    String
+  shipment      Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  
+  status        String    // Status associated with this checkpoint
+  location      String    // City, Facility, or Country
+  timestamp     DateTime  @default(now())
+  description   String    // Public event description (e.g. "Cargo processed through customs")
+  createdByName String?   // Admin staff member who logged the event
+
+  createdAt     DateTime  @default(now())
+
+  @@index([shipmentId])
+  @@map("checkpoints")
+}
+
+// Audit log recording important administrative actions
+model AuditLog {
+  id         String     @id @default(uuid())
+  adminId    String?
+  admin      AdminUser? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  adminName  String?
+
+  action     String     // e.g., "CREATE_SHIPMENT", "UPDATE_STATUS", "ADD_CHECKPOINT", "ADMIN_LOGIN"
+  targetType String     // "SHIPMENT", "CHECKPOINT", "AUTH", "SETTING"
+  targetId   String?    // e.g., trackingNumber or shipmentId
+  details    String     // JSON-serialized details of the change
+  ipAddress  String?
+
+  createdAt  DateTime   @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+// Contact form inquiries from customer support
+model ContactMessage {
+  id        String    @id @default(uuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  phone     String?
+  status    String    @default("new") // "new", "in_review", "resolved"
+  createdAt DateTime  @default(now())
+
+  @@map("contact_messages")
+}
+
+// Configurable company settings (phones, emails, office locations, alert notices)
+model CompanySetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("company_settings")
+}

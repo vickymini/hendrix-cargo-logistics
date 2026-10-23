@@ -1,0 +1,135 @@
+// Prisma schema for local development and offline testing with SQLite
+// Models are 100% identical in structure to PostgreSQL schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           String     @id @default(uuid())
+  username     String     @unique
+  email        String     @unique
+  passwordHash String
+  fullName     String?
+  role         String     @default("admin")
+  isActive     Boolean    @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  auditLogs    AuditLog[]
+
+  @@map("admin_users")
+}
+
+model Shipment {
+  id                    String        @id @default(uuid())
+  trackingNumber        String        @unique
+
+  senderName            String
+  senderCompany         String?
+  senderPhone           String
+  senderEmail           String
+  senderAddress         String
+  senderCity            String
+  senderCountry         String
+
+  recipientName         String
+  recipientCompany      String?
+  recipientPhone        String
+  recipientEmail        String
+  recipientAddress      String
+  recipientCity         String
+  recipientCountry      String
+
+  originCity            String
+  originCountry         String
+  destinationCity       String
+  destinationCountry    String
+  shippingMethod        String
+
+  packagePieces         Int           @default(1)
+  packageWeightKg       Float         @default(0.0)
+  packageDimensions     String?
+  packageDescription    String?
+
+  status                String        @default("Shipment Created")
+  currentLocation       String
+  estimatedDeliveryDate DateTime?
+  actualDeliveryDate    DateTime?
+
+  internalNotes         String?
+
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  checkpoints           Checkpoint[]
+
+  @@index([trackingNumber])
+  @@index([status])
+  @@map("shipments")
+}
+
+model Checkpoint {
+  id            String    @id @default(uuid())
+  shipmentId    String
+  shipment      Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  
+  status        String
+  location      String
+  timestamp     DateTime  @default(now())
+  description   String
+  createdByName String?
+
+  createdAt     DateTime  @default(now())
+
+  @@index([shipmentId])
+  @@map("checkpoints")
+}
+
+model AuditLog {
+  id         String     @id @default(uuid())
+  adminId    String?
+  admin      AdminUser? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  adminName  String?
+
+  action     String
+  targetType String
+  targetId   String?
+  details    String
+  ipAddress  String?
+
+  createdAt  DateTime   @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+model ContactMessage {
+  id        String    @id @default(uuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  phone     String?
+  status    String    @default("new")
+  createdAt DateTime  @default(now())
+
+  @@map("contact_messages")
+}
+
+model CompanySetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("company_settings")
+}
