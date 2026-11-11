@@ -1,17 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Send,
+  CheckCircle2,
+  AlertCircle,
+  Sparkles,
+  ShieldCheck,
+} from 'lucide-react';
 import { submitContact, getCompanySettings } from '../services/api';
 import { CompanySettingsMap } from '../types';
 
 export const ContactPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const serviceParam = searchParams.get('service');
+  const quoteParam = searchParams.get('quote');
 
   const [settings, setSettings] = useState<CompanySettingsMap>({
     companyName: 'Hendrix Cargo & Logistics',
     companyHeadline: 'Moving Your World, One Shipment at a Time.',
-    companyTagline: 'Reliable cargo, freight, and logistics solutions connecting businesses and individuals across the globe.',
+    companyTagline:
+      'Reliable cargo, freight, and logistics solutions connecting businesses and individuals across the globe.',
     supportEmail: 'support@hendrixcargo.com',
     salesEmail: 'contact@hendrixcargo.com',
     supportPhone: '+1 (800) 555-HCL2',
@@ -23,7 +35,13 @@ export const ContactPage: React.FC = () => {
     name: '',
     email: '',
     phone: '',
-    subject: serviceParam ? `Inquiry regarding ${serviceParam}` : '',
+    origin: '',
+    destination: '',
+    subject: serviceParam
+      ? `Freight Quote Inquiry: ${serviceParam}`
+      : quoteParam
+      ? 'Custom Freight Quotation Request'
+      : '',
     message: '',
   });
 
@@ -56,21 +74,39 @@ export const ContactPage: React.FC = () => {
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    // Client validation
-    if (!formData.name.trim() || !formData.email.trim() || !formData.subject.trim() || !formData.message.trim()) {
+    if (
+      !formData.name.trim() ||
+      !formData.email.trim() ||
+      !formData.subject.trim() ||
+      !formData.message.trim()
+    ) {
       setErrorMessage('Please complete all required fields.');
       setLoading(false);
       return;
     }
 
+    const routePrefix =
+      formData.origin.trim() || formData.destination.trim()
+        ? `[Route: ${formData.origin.trim() || 'TBD'} -> ${formData.destination.trim() || 'TBD'}]\n`
+        : '';
+
     try {
-      const res = await submitContact(formData);
-      setSuccessMessage(res.message || 'Your inquiry was received. We will respond promptly.');
-      // Reset form on success
+      const res = await submitContact({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim() || undefined,
+        subject: formData.subject.trim(),
+        message: `${routePrefix}${formData.message.trim()}`,
+      });
+      setSuccessMessage(
+        res.message || 'Your inquiry was received. Our dispatch specialists will respond promptly.'
+      );
       setFormData({
         name: '',
         email: '',
         phone: '',
+        origin: '',
+        destination: '',
         subject: '',
         message: '',
       });
@@ -84,35 +120,40 @@ export const ContactPage: React.FC = () => {
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen py-12 lg:py-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* Header */}
-        <div className="max-w-3xl mx-auto text-center space-y-4">
-          <span className="text-xs uppercase font-bold tracking-widest text-brand-gold-dark">
-            Direct Assistance & Inquiries
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-heading font-extrabold text-brand-navy">
+    <div className="bg-slate-50 min-h-screen">
+      {/* Executive Header Banner */}
+      <div className="bg-brand-navy text-white py-16 lg:py-20 border-b border-brand-navy-surface relative overflow-hidden">
+        <div className="absolute -right-24 -top-24 w-96 h-96 rounded-full bg-brand-gold/10 blur-3xl pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-navy-surface border border-brand-gold/30 text-xs font-bold uppercase tracking-widest text-brand-gold">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Direct Assistance &amp; Freight Quotations</span>
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-heading font-extrabold text-white">
             Contact Our Logistics Team
           </h1>
-          <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-            Have questions regarding cargo transit, freight rates, or custom logistics partnerships?
-            Our support desk is ready to assist you.
+          <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto font-light leading-relaxed">
+            Request a tailored sea, air, or road freight quotation, or connect with our 24/7
+            dispatch desk regarding an active consignment.
           </p>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Contact Details Card */}
           <div className="lg:col-span-5 bg-brand-navy text-white rounded-3xl p-8 sm:p-10 shadow-xl border border-brand-navy-surface space-y-8">
             <div className="space-y-2">
-              <h2 className="text-2xl font-heading font-bold text-white">Get in Touch</h2>
+              <h2 className="text-2xl font-heading font-bold text-white">Global Dispatch Desk</h2>
               <p className="text-slate-300 text-xs sm:text-sm font-light leading-relaxed">
-                Reach our customer service desk directly or submit an inquiry using the form.
+                Reach our customer service desk directly or submit a structured quotation inquiry
+                using the form.
               </p>
             </div>
 
             <div className="space-y-6 text-sm text-slate-300">
               <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-lg bg-brand-navy-surface border border-slate-700 flex items-center justify-center text-brand-gold flex-shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-brand-navy-surface border border-slate-700 flex items-center justify-center text-brand-gold flex-shrink-0">
                   <MapPin className="w-4 h-4" />
                 </div>
                 <div>
@@ -124,7 +165,7 @@ export const ContactPage: React.FC = () => {
               </div>
 
               <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-lg bg-brand-navy-surface border border-slate-700 flex items-center justify-center text-brand-gold flex-shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-brand-navy-surface border border-slate-700 flex items-center justify-center text-brand-gold flex-shrink-0">
                   <Phone className="w-4 h-4" />
                 </div>
                 <div>
@@ -136,7 +177,7 @@ export const ContactPage: React.FC = () => {
               </div>
 
               <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-lg bg-brand-navy-surface border border-slate-700 flex items-center justify-center text-brand-gold flex-shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-brand-navy-surface border border-slate-700 flex items-center justify-center text-brand-gold flex-shrink-0">
                   <Mail className="w-4 h-4" />
                 </div>
                 <div>
@@ -144,7 +185,10 @@ export const ContactPage: React.FC = () => {
                     Electronic Mail
                   </h4>
                   <p className="text-xs text-slate-300">
-                    <a href={`mailto:${settings.supportEmail}`} className="hover:text-brand-gold transition-colors">
+                    <a
+                      href={`mailto:${settings.supportEmail}`}
+                      className="hover:text-brand-gold transition-colors"
+                    >
                       {settings.supportEmail}
                     </a>
                   </p>
@@ -152,32 +196,37 @@ export const ContactPage: React.FC = () => {
               </div>
 
               <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-lg bg-brand-navy-surface border border-slate-700 flex items-center justify-center text-brand-gold flex-shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-brand-navy-surface border border-slate-700 flex items-center justify-center text-brand-gold flex-shrink-0">
                   <Clock className="w-4 h-4" />
                 </div>
                 <div>
                   <h4 className="text-white font-semibold text-xs uppercase tracking-wider mb-0.5">
                     Operating Schedule
                   </h4>
-                  <p className="text-xs text-slate-300 leading-relaxed">{settings.operatingHours}</p>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    {settings.operatingHours}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-800">
-              <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold block mb-1">
-                Security Guarantee
-              </span>
-              <p className="text-xs text-slate-400">
-                All communications and commercial details are protected under standard non-disclosure
-                and freight confidentiality agreements.
+            <div className="pt-4 border-t border-slate-800 flex items-start gap-2.5">
+              <ShieldCheck className="w-4 h-4 text-brand-gold flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-slate-400 leading-relaxed">
+                All communications and commercial manifest details are protected under standard
+                non-disclosure and freight confidentiality agreements.
               </p>
             </div>
           </div>
 
-          {/* Contact Form Card */}
+          {/* Contact & Quotation Form Card */}
           <div className="lg:col-span-7 bg-white rounded-3xl p-8 sm:p-10 border border-slate-200 shadow-sm">
-            <h2 className="text-2xl font-heading font-bold text-slate-900 mb-6">Send an Inquiry</h2>
+            <h2 className="text-2xl font-heading font-extrabold text-brand-navy mb-2">
+              Send an Inquiry or Quote Request
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 mb-6">
+              Complete the fields below and our logistics team will respond promptly.
+            </p>
 
             {/* Success Feedback Alert */}
             {successMessage && (
@@ -204,7 +253,10 @@ export const ContactPage: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label htmlFor="name" className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  <label
+                    htmlFor="name"
+                    className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5"
+                  >
                     Full Name <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -220,7 +272,10 @@ export const ContactPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  <label
+                    htmlFor="email"
+                    className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5"
+                  >
                     Email Address <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -238,7 +293,10 @@ export const ContactPage: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label htmlFor="phone" className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  <label
+                    htmlFor="phone"
+                    className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5"
+                  >
                     Telephone (Optional)
                   </label>
                   <input
@@ -253,7 +311,10 @@ export const ContactPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="subject" className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  <label
+                    htmlFor="subject"
+                    className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5"
+                  >
                     Subject / Service Area <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -263,14 +324,56 @@ export const ContactPage: React.FC = () => {
                     value={formData.subject}
                     onChange={handleChange}
                     required
-                    placeholder="e.g., Rate Quote for Air Freight"
+                    placeholder="e.g., Rate Quote for Sea Freight"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-brand-gold focus:bg-white transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Optional Origin & Destination Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label
+                    htmlFor="origin"
+                    className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5"
+                  >
+                    Origin City / Port (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    id="origin"
+                    name="origin"
+                    value={formData.origin}
+                    onChange={handleChange}
+                    placeholder="e.g., Singapore / London"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-brand-gold focus:bg-white transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="destination"
+                    className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5"
+                  >
+                    Destination City / Port (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    id="destination"
+                    name="destination"
+                    value={formData.destination}
+                    onChange={handleChange}
+                    placeholder="e.g., Rotterdam / New York"
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-brand-gold focus:bg-white transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="message" className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                <label
+                  htmlFor="message"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5"
+                >
                   Detailed Message / Cargo Specifications <span className="text-rose-500">*</span>
                 </label>
                 <textarea
@@ -280,7 +383,7 @@ export const ContactPage: React.FC = () => {
                   value={formData.message}
                   onChange={handleChange}
                   required
-                  placeholder="Provide cargo dimensions, estimated weight, origin city, destination city, and any special handling requirements..."
+                  placeholder="Provide cargo dimensions, estimated weight, preferred shipping mode, and any special handling requirements..."
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-brand-gold focus:bg-white transition-all resize-y"
                 />
               </div>
@@ -289,7 +392,7 @@ export const ContactPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="gold-gradient-btn px-8 py-3.5 rounded-xl text-brand-navy font-bold text-sm sm:text-base shadow-md inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="gold-gradient-btn px-8 py-4 rounded-xl text-brand-navy font-heading font-extrabold text-sm sm:text-base shadow-md inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                   <span>{loading ? 'Transmitting...' : 'Submit Inquiry'}</span>

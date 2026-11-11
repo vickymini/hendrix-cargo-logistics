@@ -8,7 +8,8 @@
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -23,7 +24,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B192C;
+  background: #060D17;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -35,26 +36,118 @@
   background: #B8860B;
 }
 
-/* Glassmorphism helpers */
+/* Glassmorphism & Surface helpers */
 .glass-navy {
-  background: rgba(11, 25, 44, 0.85);
+  background: rgba(11, 25, 44, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-dark {
+  background: rgba(6, 13, 23, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-card {
+  background: rgba(21, 37, 63, 0.65);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .gold-gradient-text {
-  background: linear-gradient(135deg, #F7E096 0%, #D4AF37 50%, #B8860B 100%);
+  background: linear-gradient(135deg, #FFF3B0 0%, #D4AF37 50%, #AA7C11 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .gold-gradient-btn {
-  background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+  background: linear-gradient(135deg, #E5C158 0%, #D4AF37 50%, #B8860B 100%);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .gold-gradient-btn:hover {
-  background: linear-gradient(135deg, #F7E096 0%, #D4AF37 100%);
-  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #F7E096 0%, #D4AF37 60%, #C59B27 100%);
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.45);
+  transform: translateY(-2px);
+}
+
+.navy-gradient-bg {
+  background: radial-gradient(circle at 20% 20%, #15253F 0%, #0B192C 55%, #060D17 100%);
+}
+
+/* Hero subtle Ken Burns zoom */
+@keyframes kenBurns {
+  0% {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  100% {
+    transform: scale(1.08) translate3d(-1%, -1%, 0);
+  }
+}
+
+.animate-ken-burns {
+  animation: kenBurns 12s ease-out forwards;
+}
+
+/* Animated SVG Route Lines */
+@keyframes routeDash {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+
+.animate-route-dash {
+  stroke-dasharray: 6 6;
+  animation: routeDash 1.8s linear infinite;
+}
+
+@keyframes routeDashFast {
+  to {
+    stroke-dashoffset: -60;
+  }
+}
+
+.animate-route-air {
+  stroke-dasharray: 8 4;
+  animation: routeDashFast 1.2s linear infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float {
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
+/* Print optimization for tracking manifests */
+@media print {
+  header, footer, .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+  }
 }

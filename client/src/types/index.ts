@@ -17,9 +17,13 @@ export type ShippingMethod =
   | 'Air Freight'
   | 'Sea Freight'
   | 'Road Transportation'
+  | 'Road Freight'
   | 'International Shipping'
+  | 'International Cargo'
   | 'Import and Export Logistics'
+  | 'Customs Clearance'
   | 'Warehousing'
+  | 'Warehousing and Distribution'
   | 'Door-to-Door Delivery'
   | 'Business Logistics Solutions';
 
@@ -57,6 +61,7 @@ export interface PublicTrackingData {
   createdAt: string;
   lastUpdated: string;
   checkpoints: CheckpointItem[];
+  isDemoData?: boolean;
 }
 
 export interface AdminShipment {
